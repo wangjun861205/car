@@ -1,0 +1,26 @@
+# github.com/MarinX/keylogger v0.0.0-20200818111051-af3ca74c8049
+## explicit
+github.com/MarinX/keylogger
+# github.com/hybridgroup/mjpeg v0.0.0-20140228234708-4680f319790e
+## explicit
+github.com/hybridgroup/mjpeg
+# github.com/joho/godotenv v1.3.0
+## explicit
+github.com/joho/godotenv
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# github.com/sirupsen/logrus v1.7.0
+## explicit
+github.com/sirupsen/logrus
+# github.com/stianeikeland/go-rpio v3.0.0+incompatible
+## explicit
+github.com/stianeikeland/go-rpio
+# gocv.io/x/gocv v0.26.0
+## explicit
+gocv.io/x/gocv
+# golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+## explicit
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
+golang.org/x/sys/windows
