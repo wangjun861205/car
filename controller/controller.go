@@ -1,67 +1,108 @@
 package controller
 
-import "buxiong/car/model"
+import (
+	"buxiong/car/model"
+)
 
 type controller struct {
-	left  pwmer
-	right pwmer
+	max   uint64
+	base  uint64
+	step  uint64
+	left  driver
+	right driver
 }
 
-func NewController(left, right pwmer) *controller {
+func NewController(max, base, step uint64, left, right driver) *controller {
 	return &controller{
+		max,
+		base,
+		step,
 		left,
 		right,
 	}
 }
 
-func (c *controller) Run() {
-	c.left.Run()
-	c.right.Run()
+func (c *controller) Close() error {
+	if err := c.left.Close(); err != nil {
+		return err
+	}
+	return c.right.Close()
 }
 
-func (c *controller) Stop() {
-	c.left.Stop()
-	c.right.Stop()
+func (c *controller) forward(status *model.DriverStatus, driver driver) {
+	switch status.Direction() {
+	case model.DirectionForward:
+		if status.Duty()+c.step > c.max {
+			driver.Forward(c.max)
+		} else {
+			driver.Forward(status.Duty() + c.step)
+		}
+	case model.DirectionBackward:
+		if status.Duty()-c.step < c.base {
+			driver.Brake()
+		} else {
+			driver.Backward(status.Duty() - c.step)
+		}
+	default:
+		driver.Forward(c.base)
+	}
 }
 
-func (c *controller) Accelerate() {
+func (c *controller) Forward() {
 	leftStat := c.left.Status()
 	rightStat := c.right.Status()
-	if leftStat.Proportion+leftStat.Step > 100 || rightStat.Proportion+rightStat.Step > 100 {
-		return
-	}
-	c.left.Increment()
-	c.right.Increment()
+	c.forward(leftStat, c.left)
+	c.forward(rightStat, c.right)
 }
 
-func (c *controller) Brake() {
-	c.left.Decrement()
-	c.right.Decrement()
+func (c *controller) backward(status *model.DriverStatus, driver driver) {
+	switch status.Direction() {
+	case model.DirectionForward:
+		if status.Duty()-c.step < c.base {
+			driver.Brake()
+		} else {
+			driver.Forward(status.Duty() - c.step)
+		}
+	case model.DirectionBackward:
+		if status.Duty()+c.step > c.max {
+			driver.Backward(c.max)
+		} else {
+			driver.Backward(status.Duty() + c.step)
+		}
+	default:
+		driver.Backward(c.base)
+	}
+}
+
+func (c *controller) Backward() {
+	leftStat := c.left.Status()
+	rightStat := c.right.Status()
+	c.backward(leftStat, c.left)
+	c.backward(rightStat, c.right)
 }
 
 func (c *controller) TurnLeft() {
 	leftStat := c.left.Status()
 	rightStat := c.right.Status()
-	if leftStat.Proportion <= rightStat.Proportion {
-		c.left.Decrement()
-	} else {
-		c.right.Increment()
+	if leftStat.Duty()+c.step > c.max || rightStat.Duty()+c.step > c.max {
+		return
 	}
+	c.backward(leftStat, c.left)
+	c.forward(rightStat, c.right)
 }
 
 func (c *controller) TurnRight() {
 	leftStat := c.left.Status()
 	rightStat := c.right.Status()
-	if rightStat.Proportion <= leftStat.Proportion {
-		c.right.Decrement()
-	} else {
-		c.left.Increment()
+	if leftStat.Duty()+c.step > c.max || rightStat.Duty()+c.step > c.max {
+		return
 	}
+	c.forward(leftStat, c.left)
+	c.backward(rightStat, c.right)
 }
 
-func (c *controller) Status() model.ControllerStatus {
-	return model.ControllerStatus{
-		Left:  c.left.Status(),
-		Right: c.right.Status(),
-	}
+func (c *controller) Status() *model.ControllerStatus {
+	leftStat := c.left.Status()
+	rightStat := c.right.Status()
+	return model.NewControllerStatus(leftStat, rightStat)
 }

@@ -22,7 +22,7 @@ func NewRemote(client client, keyboard keyboardReader) *remote {
 
 func (r *remote) registerHandler() {
 	r.client.RegisterHandler(func(b []byte) {
-		var resp model.CarResponse
+		var resp model.Response
 		if err := json.Unmarshal(b, &resp); err != nil {
 			log.Println(errors.Wrap(err, "failed to unmarshal response"))
 			return
@@ -41,21 +41,17 @@ func (r *remote) Run() {
 			if event.KeyPress() {
 				switch event.KeyString() {
 				case "Up":
-					b, _ := json.Marshal(model.CarInstruction{Action: model.ActionAccelerate})
+					b, _ := json.Marshal(model.Request{Action: model.Forward})
 					r.client.Write(b)
 				case "Down":
-					b, _ := json.Marshal(model.CarInstruction{Action: model.ActionBrake})
+					b, _ := json.Marshal(model.Request{Action: model.Backward})
 					r.client.Write(b)
 				case "Left":
-					b, _ := json.Marshal(model.CarInstruction{Action: model.ActionTurnLeft})
+					b, _ := json.Marshal(model.Request{Action: model.TurnLeft})
 					r.client.Write(b)
 				case "Right":
-					b, _ := json.Marshal(model.CarInstruction{Action: model.ActionTurnRight})
+					b, _ := json.Marshal(model.Request{Action: model.TurnRight})
 					r.client.Write(b)
-				case "Q":
-					b, _ := json.Marshal(model.CarInstruction{Action: model.ActionStop})
-					r.client.Write(b)
-
 				default:
 					log.Println(errors.Errorf("unknown key map(key: %s)", event.KeyString()))
 				}

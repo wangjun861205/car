@@ -12,11 +12,11 @@ type keyboardReader struct {
 	out     chan keylogger.InputEvent
 }
 
-func NewKeyboardReader() (*keyboardReader, error) {
-	keyboard := keylogger.FindKeyboardDevice()
-	logger, err := keylogger.New(keyboard)
+// NewKeyboardReader NewKeyboardReader
+func NewKeyboardReader(inputEvent string) (*keyboardReader, error) {
+	logger, err := keylogger.New(inputEvent)
 	if err != nil {
-		return nil, errors.Wrap(err, "init keyboard reader failed")
+		return nil, errors.Wrapf(err, "failed to init keyboard(event: %s)", inputEvent)
 	}
 	return &keyboardReader{
 		logger,

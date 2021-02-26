@@ -3,26 +3,50 @@ package main
 import (
 	"buxiong/car/car"
 	"buxiong/car/controller"
+	"buxiong/car/driver"
 	"buxiong/car/model"
-	"buxiong/car/network"
-	"buxiong/car/pwm"
 	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"github.com/stianeikeland/go-rpio"
+	"github.com/stianeikeland/go-rpio/v4"
 )
 
-func getConfig() (leftPinNum, rightPinNum int, base, step uint8, addr string, err error) {
-	left, err := strconv.ParseInt(os.Getenv(model.LeftMotoPin), 10, 64)
+func getConfig() (cfg model.Config, err error) {
+	leftA, err := strconv.ParseInt(os.Getenv(model.LeftAPin), 10, 64)
 	if err != nil {
 		err = errors.Wrap(err, "parse left moto pin num failed")
 		return
 	}
-	right, err := strconv.ParseInt(os.Getenv(model.RightMotoPin), 10, 64)
+	leftB, err := strconv.ParseInt(os.Getenv(model.LeftBPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse left moto pin num failed")
+		return
+	}
+	leftPWM, err := strconv.ParseInt(os.Getenv(model.LeftPWMPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse left moto pin num failed")
+		return
+	}
+	rightA, err := strconv.ParseInt(os.Getenv(model.RightAPin), 10, 64)
 	if err != nil {
 		err = errors.Wrap(err, "parse right moto pin num failed")
+		return
+	}
+	rightB, err := strconv.ParseInt(os.Getenv(model.RightBPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse right moto pin num failed")
+		return
+	}
+	rightPWM, err := strconv.ParseInt(os.Getenv(model.RightPWMPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse right moto pin num failed")
+		return
+	}
+	m, err := strconv.ParseUint(os.Getenv(model.Max), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse max failed")
 		return
 	}
 	b, err := strconv.ParseUint(os.Getenv(model.Base), 10, 64)
@@ -36,7 +60,17 @@ func getConfig() (leftPinNum, rightPinNum int, base, step uint8, addr string, er
 		return
 	}
 	a := os.Getenv(model.ListenAddr)
-	return int(left), int(right), uint8(b), uint8(s), a, nil
+	cfg.Addr = a
+	cfg.Max = m
+	cfg.Base = b
+	cfg.LeftAPin = uint8(leftA)
+	cfg.LeftBPin = uint8(leftB)
+	cfg.LeftPWMNum = uint8(leftPWM)
+	cfg.RightAPin = uint8(rightA)
+	cfg.RightBPin = uint8(rightB)
+	cfg.RightPWMNum = uint8(rightPWM)
+	cfg.Step = s
+	return
 }
 
 func main() {
@@ -47,32 +81,31 @@ func main() {
 		panic(err)
 	}
 	defer rpio.Close()
-	leftPinNum, rightPinNum, base, step, addr, err := getConfig()
+	cfg, err := getConfig()
 	if err != nil {
 		panic(err)
 	}
-	leftPin := rpio.Pin(leftPinNum)
-	rightPin := rpio.Pin(rightPinNum)
-	leftPin.Output()
-	rightPin.Output()
-	leftPWM, err := pwm.NewPWM(base, step, leftPin)
+	leftA := rpio.Pin(cfg.LeftAPin)
+	leftB := rpio.Pin(cfg.LeftBPin)
+	rightA := rpio.Pin(cfg.RightAPin)
+	rightB := rpio.Pin(cfg.RightBPin)
+	leftDriver, err := driver.NewDriver(leftA, leftB, cfg.LeftPWMNum, cfg.Max)
 	if err != nil {
 		panic(err)
 	}
-	rightPWM, err := pwm.NewPWM(base, step, rightPin)
-	if err != nil {
-		panic(err)
-	}
-	server, err := network.NewServer(addr, '\n')
+	rightDriver, err := driver.NewDriver(rightA, rightB, cfg.RightPWMNum, cfg.Max)
 	if err != nil {
 		panic(err)
 	}
 	car := car.NewCar(
 		controller.NewController(
-			leftPWM,
-			rightPWM,
+			cfg.Max,
+			cfg.Base,
+			cfg.Step,
+			leftDriver,
+			rightDriver,
 		),
-		server,
+		cfg.Addr,
 	)
 	car.Run()
 }

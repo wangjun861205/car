@@ -5,17 +5,18 @@ import (
 )
 
 type controller interface {
-	Run()
-	Stop()
-	Accelerate()
-	Brake()
+	Close() error
+	Forward()
+	Backward()
 	TurnLeft()
 	TurnRight()
-	Status() model.ControllerStatus
+	Status() *model.ControllerStatus
 }
 
 type server interface {
 	Run()
-	Stop()
-	RegisterHandler(func(b []byte) []byte)
+	Requests() chan model.Request
+	Errors() chan error
+	Reply(model.Response) error
+	Close() error
 }

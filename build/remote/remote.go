@@ -19,7 +19,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	keyboard, err := keyboard.NewKeyboardReader()
+	keyboardEvent := os.Getenv(model.KeyboardEvent)
+	keyboard, err := keyboard.NewKeyboardReader(keyboardEvent)
 	if err != nil {
 		panic(err)
 	}

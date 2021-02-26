@@ -1,6 +1,10 @@
 # github.com/MarinX/keylogger v0.0.0-20200818111051-af3ca74c8049
 ## explicit
 github.com/MarinX/keylogger
+# github.com/codehardt/mmap-go v1.0.1
+## explicit
+# github.com/fsnotify/fsnotify v1.4.9
+## explicit
 # github.com/hybridgroup/mjpeg v0.0.0-20140228234708-4680f319790e
 ## explicit
 github.com/hybridgroup/mjpeg
@@ -13,9 +17,11 @@ github.com/pkg/errors
 # github.com/sirupsen/logrus v1.7.0
 ## explicit
 github.com/sirupsen/logrus
-# github.com/stianeikeland/go-rpio v3.0.0+incompatible
+# github.com/stianeikeland/go-rpio v4.2.0+incompatible
 ## explicit
-github.com/stianeikeland/go-rpio
+# github.com/stianeikeland/go-rpio/v4 v4.4.0
+## explicit
+github.com/stianeikeland/go-rpio/v4
 # gocv.io/x/gocv v0.26.0
 ## explicit
 gocv.io/x/gocv
@@ -24,3 +30,6 @@ gocv.io/x/gocv
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+# gopkg.in/fsnotify.v0 v0.9.3
+## explicit
+gopkg.in/fsnotify.v0
