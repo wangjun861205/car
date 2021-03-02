@@ -15,7 +15,7 @@ const (
 	// TurnRight Turn Right
 	TurnRight CarAction = "TURN_RIGHT"
 	// Stop Stop
-	Stop CarAction = "STOP"
+	Stop CarAction = "Stop"
 )
 
 // Request Request

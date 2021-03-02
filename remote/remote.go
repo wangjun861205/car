@@ -52,6 +52,9 @@ func (r *remote) Run() {
 				case "Right":
 					b, _ := json.Marshal(model.Request{Action: model.TurnRight})
 					r.client.Write(b)
+				case "S":
+					b, _ := json.Marshal(model.Request{Action: model.Stop})
+					r.client.Write(b)
 				default:
 					log.Println(errors.Errorf("unknown key map(key: %s)", event.KeyString()))
 				}

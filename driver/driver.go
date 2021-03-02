@@ -7,7 +7,8 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
-type driver struct {
+// Driver motor driver
+type Driver struct {
 	direction model.Direction
 	period    uint64
 	dutyCycle uint64
@@ -43,7 +44,7 @@ func initPWM(pwm *PWM, period uint64) error {
 	return nil
 }
 
-func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*driver, error) {
+func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*Driver, error) {
 	aPin.Output()
 	aPin.High()
 	bPin.Output()
@@ -56,7 +57,7 @@ func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*driver, error
 		pwm.Close()
 		return nil, err
 	}
-	return &driver{
+	return &Driver{
 		direction: model.DirectionGlide,
 		period:    period,
 		dutyCycle: 0,
@@ -66,7 +67,7 @@ func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*driver, error
 	}, nil
 }
 
-func (d *driver) Brake() {
+func (d *Driver) Brake() {
 	d.aPin.Low()
 	d.bPin.Low()
 	d.pwm.SetDutyCycle(0)
@@ -74,7 +75,7 @@ func (d *driver) Brake() {
 	d.dutyCycle = 0
 }
 
-func (d *driver) Glide() {
+func (d *Driver) Glide() {
 	d.aPin.High()
 	d.bPin.High()
 	d.pwm.SetDutyCycle(0)
@@ -82,7 +83,7 @@ func (d *driver) Glide() {
 	d.dutyCycle = 0
 }
 
-func (d *driver) Forward(duty uint64) {
+func (d *Driver) Forward(duty uint64) {
 	d.aPin.Low()
 	d.bPin.High()
 	d.pwm.SetDutyCycle(duty)
@@ -90,7 +91,7 @@ func (d *driver) Forward(duty uint64) {
 	d.dutyCycle = duty
 }
 
-func (d *driver) Backward(duty uint64) {
+func (d *Driver) Backward(duty uint64) {
 	d.aPin.High()
 	d.bPin.Low()
 	d.pwm.SetDutyCycle(duty)
@@ -98,10 +99,10 @@ func (d *driver) Backward(duty uint64) {
 	d.dutyCycle = duty
 }
 
-func (d *driver) Status() *model.DriverStatus {
+func (d *Driver) Status() *model.DriverStatus {
 	return model.NewDriverStatus(d.direction, d.dutyCycle)
 }
 
-func (d *driver) Close() error {
+func (d *Driver) Close() error {
 	return d.pwm.Close()
 }

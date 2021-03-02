@@ -123,6 +123,8 @@ OUTER:
 							c.ctl.TurnLeft()
 						case model.TurnRight:
 							c.ctl.TurnRight()
+						case model.Stop:
+							c.ctl.Stop()
 						}
 						stat := c.ctl.Status()
 						resp := model.Response{

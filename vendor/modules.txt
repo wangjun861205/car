@@ -3,6 +3,8 @@
 github.com/MarinX/keylogger
 # github.com/codehardt/mmap-go v1.0.1
 ## explicit
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/fsnotify/fsnotify v1.4.9
 ## explicit
 # github.com/hybridgroup/mjpeg v0.0.0-20140228234708-4680f319790e
@@ -14,6 +16,8 @@ github.com/joho/godotenv
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.7.0
 ## explicit
 github.com/sirupsen/logrus
@@ -22,10 +26,17 @@ github.com/sirupsen/logrus
 # github.com/stianeikeland/go-rpio/v4 v4.4.0
 ## explicit
 github.com/stianeikeland/go-rpio/v4
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+# github.com/warthog618/gpiod v0.6.0
+## explicit
+github.com/warthog618/gpiod
+github.com/warthog618/gpiod/uapi
 # gocv.io/x/gocv v0.26.0
 ## explicit
 gocv.io/x/gocv
-# golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+# golang.org/x/sys v0.0.0-20210301091718-77cc2087c03b
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -33,3 +44,5 @@ golang.org/x/sys/windows
 # gopkg.in/fsnotify.v0 v0.9.3
 ## explicit
 gopkg.in/fsnotify.v0
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3
