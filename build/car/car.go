@@ -7,6 +7,7 @@ import (
 	"buxiong/car/model"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
@@ -44,32 +45,40 @@ func getConfig() (cfg model.Config, err error) {
 		err = errors.Wrap(err, "parse right moto pin num failed")
 		return
 	}
-	m, err := strconv.ParseUint(os.Getenv(model.Max), 10, 64)
+	period, err := strconv.ParseUint(os.Getenv(model.Period), 10, 64)
 	if err != nil {
-		err = errors.Wrap(err, "parse max failed")
+		err = errors.Wrap(err, "parse right moto pin num failed")
 		return
 	}
-	b, err := strconv.ParseUint(os.Getenv(model.Base), 10, 64)
-	if err != nil {
-		err = errors.Wrap(err, "parse base failed")
-		return
+	leftSteps, rightSteps := make([]uint64, 0, 10), make([]uint64, 0, 10)
+	lss := strings.Split(os.Getenv(model.LeftSteps), ",")
+	for _, s := range lss {
+		i, e := strconv.ParseUint(s, 10, 64)
+		if err != nil {
+			err = errors.Wrap(e, "parse left steps failed")
+			return
+		}
+		leftSteps = append(leftSteps, i)
 	}
-	s, err := strconv.ParseUint(os.Getenv(model.Step), 10, 64)
-	if err != nil {
-		err = errors.Wrap(err, "parse step failed")
-		return
+	rss := strings.Split(os.Getenv(model.RightSteps), ",")
+	for _, s := range rss {
+		i, e := strconv.ParseUint(s, 10, 64)
+		if err != nil {
+			err = errors.Wrap(e, "parse left steps failed")
+			return
+		}
+		rightSteps = append(rightSteps, i)
 	}
+	cfg.Period = period
+	cfg.LeftSteps, cfg.RightSteps = leftSteps, rightSteps
 	a := os.Getenv(model.ListenAddr)
 	cfg.Addr = a
-	cfg.Max = m
-	cfg.Base = b
 	cfg.LeftAPin = uint8(leftA)
 	cfg.LeftBPin = uint8(leftB)
 	cfg.LeftPWMNum = uint8(leftPWM)
 	cfg.RightAPin = uint8(rightA)
 	cfg.RightBPin = uint8(rightB)
 	cfg.RightPWMNum = uint8(rightPWM)
-	cfg.Step = s
 	return
 }
 
@@ -89,19 +98,18 @@ func main() {
 	leftB := rpio.Pin(cfg.LeftBPin)
 	rightA := rpio.Pin(cfg.RightAPin)
 	rightB := rpio.Pin(cfg.RightBPin)
-	leftDriver, err := driver.NewDriver(leftA, leftB, cfg.LeftPWMNum, cfg.Max)
+	leftDriver, err := driver.NewDriver(leftA, leftB, cfg.LeftPWMNum, cfg.Period)
 	if err != nil {
 		panic(err)
 	}
-	rightDriver, err := driver.NewDriver(rightA, rightB, cfg.RightPWMNum, cfg.Max)
+	rightDriver, err := driver.NewDriver(rightA, rightB, cfg.RightPWMNum, cfg.Period)
 	if err != nil {
 		panic(err)
 	}
 	car := car.NewCar(
 		controller.NewController(
-			cfg.Max,
-			cfg.Base,
-			cfg.Step,
+			cfg.LeftSteps,
+			cfg.RightSteps,
 			leftDriver,
 			rightDriver,
 		),

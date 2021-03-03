@@ -13,12 +13,12 @@ const (
 	RightBPin = "RIGHT_B_PIN"
 	// RightPWMPin right moto pwm pin
 	RightPWMPin = "RIGHT_PWM_PIN"
-	// Max max proportion
-	Max = "MAX"
-	// Base base proportion
-	Base = "BASE"
-	// Step stp proportion
-	Step = "STEP"
+	// LeftSteps left motor duty cycle steps
+	LeftSteps = "LEFT_STEPS"
+	// RightSteps right motor duty cycle steps
+	RightSteps = "RIGHT_STEPS"
+	// Period motor period
+	Period = "PERIOD"
 	// ListenAddr listen address
 	ListenAddr = "LISTEN_ADDR"
 	// DailAddr dail address

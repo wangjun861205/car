@@ -5,18 +5,20 @@ import (
 )
 
 type controller struct {
-	max   uint64
-	base  uint64
-	step  uint64
-	left  driver
-	right driver
+	leftSteps  []uint64
+	rightSteps []uint64
+	leftIndex  int
+	rightIndex int
+	left       driver
+	right      driver
 }
 
-func NewController(max, base, step uint64, left, right driver) *controller {
+func NewController(leftSteps, rightSteps []uint64, left, right driver) *controller {
 	return &controller{
-		max,
-		base,
-		step,
+		leftSteps,
+		rightSteps,
+		0,
+		0,
 		left,
 		right,
 	}
@@ -33,18 +35,22 @@ func (c *controller) leftStepForward() {
 	stat := c.left.Status()
 	switch stat.Direction() {
 	case model.DirectionForward:
-		if stat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 {
 			return
 		}
-		c.left.Forward(stat.Duty() + c.step)
+		c.leftIndex++
+		c.left.Forward(c.leftSteps[c.leftIndex])
 	case model.DirectionBackward:
-		if stat.Duty()-c.step < c.base {
+		if c.leftIndex <= 1 {
+			c.leftIndex = 0
 			c.left.Brake()
 			return
 		}
-		c.left.Backward(stat.Duty() - c.step)
+		c.leftIndex--
+		c.left.Backward(c.leftSteps[c.leftIndex])
 	default:
-		c.left.Forward(c.base)
+		c.leftIndex = 1
+		c.left.Forward(c.leftSteps[1])
 	}
 }
 
@@ -52,18 +58,22 @@ func (c *controller) rightStepForward() {
 	stat := c.right.Status()
 	switch stat.Direction() {
 	case model.DirectionForward:
-		if stat.Duty()+c.step > c.max {
+		if c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
-		c.right.Forward(stat.Duty() + c.step)
+		c.rightIndex++
+		c.right.Forward(c.rightSteps[c.rightIndex])
 	case model.DirectionBackward:
-		if stat.Duty()-c.step < c.base {
+		if c.rightIndex <= 1 {
+			c.rightIndex = 0
 			c.right.Brake()
 			return
 		}
-		c.right.Backward(stat.Duty() - c.step)
+		c.rightIndex--
+		c.right.Backward(c.rightSteps[c.rightIndex])
 	default:
-		c.right.Forward(c.base)
+		c.rightIndex = 1
+		c.right.Forward(c.rightSteps[1])
 	}
 }
 
@@ -71,18 +81,22 @@ func (c *controller) leftStepBackward() {
 	stat := c.left.Status()
 	switch stat.Direction() {
 	case model.DirectionBackward:
-		if stat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 {
 			return
 		}
-		c.left.Backward(stat.Duty() + c.step)
+		c.leftIndex++
+		c.left.Backward(c.leftSteps[c.leftIndex])
 	case model.DirectionForward:
-		if stat.Duty()-c.step < c.base {
+		if c.leftIndex <= 1 {
+			c.leftIndex = 0
 			c.left.Brake()
 			return
 		}
-		c.left.Forward(stat.Duty() - c.step)
+		c.leftIndex--
+		c.left.Forward(c.leftSteps[c.leftIndex])
 	default:
-		c.left.Backward(c.base)
+		c.leftIndex = 1
+		c.left.Backward(c.leftSteps[1])
 	}
 }
 
@@ -90,18 +104,22 @@ func (c *controller) rightStepBackward() {
 	stat := c.right.Status()
 	switch stat.Direction() {
 	case model.DirectionBackward:
-		if stat.Duty()+c.step > c.max {
+		if c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
-		c.right.Backward(stat.Duty() + c.step)
+		c.rightIndex++
+		c.right.Backward(c.rightSteps[c.rightIndex])
 	case model.DirectionForward:
-		if stat.Duty()-c.step < c.base {
+		if c.rightIndex <= 1 {
+			c.rightIndex = 0
 			c.right.Brake()
 			return
 		}
-		c.right.Forward(stat.Duty() - c.step)
+		c.rightIndex--
+		c.right.Forward(c.rightSteps[c.rightIndex])
 	default:
-		c.right.Backward(c.base)
+		c.rightIndex = 1
+		c.right.Backward(c.rightSteps[1])
 	}
 }
 
@@ -119,13 +137,13 @@ const (
 	stay          direction = "STAY"
 )
 
-func determineCarDirection(leftStat, rightStat *model.DriverStatus) direction {
+func determineCarDirection(leftStat, rightStat *model.DriverStatus, leftIndex, rightIndex int) direction {
 	switch {
 	case leftStat.Direction() == model.DirectionForward && rightStat.Direction() == model.DirectionForward:
 		switch {
-		case leftStat.Duty() == rightStat.Duty():
+		case leftIndex == rightIndex:
 			return forward
-		case leftStat.Duty() < rightStat.Duty():
+		case leftIndex < rightIndex:
 			return forwardLeft
 		default:
 			return forwardRight
@@ -134,9 +152,9 @@ func determineCarDirection(leftStat, rightStat *model.DriverStatus) direction {
 		return forwardRight
 	case leftStat.Direction() == model.DirectionForward && rightStat.Direction() == model.DirectionBackward:
 		switch {
-		case leftStat.Duty() == rightStat.Duty():
+		case leftIndex == rightIndex:
 			return right
-		case leftStat.Duty() < rightStat.Duty():
+		case leftIndex < rightIndex:
 			return backwardLeft
 		default:
 			return forwardRight
@@ -149,9 +167,9 @@ func determineCarDirection(leftStat, rightStat *model.DriverStatus) direction {
 		return backwardLeft
 	case leftStat.Direction() == model.DirectionBackward && rightStat.Direction() == model.DirectionForward:
 		switch {
-		case leftStat.Duty() == rightStat.Duty():
+		case leftIndex == rightIndex:
 			return left
-		case leftStat.Duty() < rightStat.Duty():
+		case leftIndex < rightIndex:
 			return forwardLeft
 		default:
 			return backwardRight
@@ -160,9 +178,9 @@ func determineCarDirection(leftStat, rightStat *model.DriverStatus) direction {
 		return backwardRight
 	default:
 		switch {
-		case leftStat.Duty() == rightStat.Duty():
+		case leftIndex == rightIndex:
 			return backward
-		case leftStat.Duty() < rightStat.Duty():
+		case leftIndex < rightIndex:
 			return backwardLeft
 		default:
 			return backwardRight
@@ -172,25 +190,25 @@ func determineCarDirection(leftStat, rightStat *model.DriverStatus) direction {
 
 func (c *controller) Forward() {
 	leftStat, rightStat := c.left.Status(), c.right.Status()
-	direction := determineCarDirection(leftStat, rightStat)
+	direction := determineCarDirection(leftStat, rightStat, c.leftIndex, c.rightIndex)
 	switch direction {
 	case stay, backward, backwardLeft, backwardRight:
 		c.leftStepForward()
 		c.rightStepForward()
 	case forward, forwardLeft, forwardRight:
-		if leftStat.Duty()+c.step > c.max || rightStat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 || c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
 		c.leftStepForward()
 		c.rightStepForward()
 	case left:
-		if rightStat.Duty()+c.step > c.max {
+		if c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
 		c.leftStepForward()
 		c.rightStepForward()
 	case right:
-		if leftStat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 {
 			return
 		}
 		c.leftStepForward()
@@ -200,25 +218,25 @@ func (c *controller) Forward() {
 
 func (c *controller) Backward() {
 	leftStat, rightStat := c.left.Status(), c.right.Status()
-	direction := determineCarDirection(leftStat, rightStat)
+	direction := determineCarDirection(leftStat, rightStat, c.leftIndex, c.rightIndex)
 	switch direction {
 	case stay, forward, forwardLeft, forwardRight:
 		c.leftStepBackward()
 		c.rightStepBackward()
 	case backward, backwardLeft, backwardRight:
-		if leftStat.Duty()+c.step > c.max || rightStat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 || c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
 		c.leftStepBackward()
 		c.rightStepBackward()
 	case left:
-		if leftStat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 {
 			return
 		}
 		c.leftStepBackward()
 		c.rightStepBackward()
 	case right:
-		if rightStat.Duty()+c.step > c.max {
+		if c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
 		c.leftStepBackward()
@@ -229,13 +247,13 @@ func (c *controller) Backward() {
 func (c *controller) TurnLeft() {
 	leftStat := c.left.Status()
 	rightStat := c.right.Status()
-	direction := determineCarDirection(leftStat, rightStat)
+	direction := determineCarDirection(leftStat, rightStat, c.leftIndex, c.rightIndex)
 	switch direction {
 	case stay:
 		c.rightStepForward()
 		c.leftStepBackward()
 	case forward, forwardLeft:
-		if rightStat.Duty()+c.step > c.max {
+		if c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
 		c.rightStepForward()
@@ -244,7 +262,7 @@ func (c *controller) TurnLeft() {
 		c.rightStepForward()
 		c.leftStepBackward()
 	case backward, backwardLeft:
-		if rightStat.Duty()+c.step > c.max {
+		if c.rightIndex == len(c.rightSteps)-1 {
 			return
 		}
 		c.leftStepForward()
@@ -262,19 +280,19 @@ func (c *controller) TurnLeft() {
 func (c *controller) TurnRight() {
 	leftStat := c.left.Status()
 	rightStat := c.right.Status()
-	direction := determineCarDirection(leftStat, rightStat)
+	direction := determineCarDirection(leftStat, rightStat, c.leftIndex, c.rightIndex)
 	switch direction {
 	case stay, left, right, forwardLeft:
 		c.leftStepForward()
 		c.rightStepBackward()
 	case forward, forwardRight:
-		if leftStat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 {
 			return
 		}
 		c.leftStepForward()
 		c.rightStepBackward()
 	case backward, backwardRight:
-		if leftStat.Duty()+c.step > c.max {
+		if c.leftIndex == len(c.leftSteps)-1 {
 			return
 		}
 		c.leftStepBackward()

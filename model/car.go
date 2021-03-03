@@ -45,8 +45,8 @@ type Config struct {
 	RightAPin   uint8
 	RightBPin   uint8
 	RightPWMNum uint8
-	Max         uint64
-	Base        uint64
-	Step        uint64
+	Period      uint64
+	LeftSteps   []uint64
+	RightSteps  []uint64
 	Addr        string
 }
