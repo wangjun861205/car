@@ -5,6 +5,7 @@ import (
 )
 
 type controller interface {
+	Run()
 	Close() error
 	Forward()
 	Backward()

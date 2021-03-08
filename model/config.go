@@ -13,12 +13,16 @@ const (
 	RightBPin = "RIGHT_B_PIN"
 	// RightPWMPin right moto pwm pin
 	RightPWMPin = "RIGHT_PWM_PIN"
-	// LeftSteps left motor duty cycle steps
-	LeftSteps = "LEFT_STEPS"
-	// RightSteps right motor duty cycle steps
-	RightSteps = "RIGHT_STEPS"
-	// Period motor period
-	Period = "PERIOD"
+	// LeftEncoderAPin left encoder a pin
+	LeftEncoderAPin = "LEFT_ENCODER_A_PIN"
+	// LeftEncoderBPin left encoder b pin
+	LeftEncoderBPin = "LEFT_ENCODER_B_PIN"
+	// RightEncoderAPin right encoder a pin
+	RightEncoderAPin = "RIGHT_ENCODER_A_PIN"
+	// RightEncoderBPin right encoder b pin
+	RightEncoderBPin = "RIGHT_ENCODER_B_PIN"
+	// Speeds Speeds
+	Speeds = "SPEEDS"
 	// ListenAddr listen address
 	ListenAddr = "LISTEN_ADDR"
 	// DailAddr dail address

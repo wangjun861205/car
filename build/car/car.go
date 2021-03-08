@@ -45,40 +45,49 @@ func getConfig() (cfg model.Config, err error) {
 		err = errors.Wrap(err, "parse right moto pin num failed")
 		return
 	}
-	period, err := strconv.ParseUint(os.Getenv(model.Period), 10, 64)
+	leftEncoderA, err := strconv.ParseInt(os.Getenv(model.LeftEncoderAPin), 10, 64)
 	if err != nil {
-		err = errors.Wrap(err, "parse right moto pin num failed")
+		err = errors.Wrap(err, "parse left encoder a pin num failed")
 		return
 	}
-	leftSteps, rightSteps := make([]uint64, 0, 10), make([]uint64, 0, 10)
-	lss := strings.Split(os.Getenv(model.LeftSteps), ",")
-	for _, s := range lss {
-		i, e := strconv.ParseUint(s, 10, 64)
+	leftEncoderB, err := strconv.ParseInt(os.Getenv(model.LeftEncoderBPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse left encoder b pin num failed")
+		return
+	}
+	rightEncoderA, err := strconv.ParseInt(os.Getenv(model.RightEncoderAPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse right encoder a pin num failed")
+		return
+	}
+	rightEncoderB, err := strconv.ParseInt(os.Getenv(model.RightEncoderBPin), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse right encoder b pin num failed")
+		return
+	}
+	speeds := make([]float64, 0, 10)
+	ss := strings.Split(os.Getenv(model.Speeds), ",")
+	for _, s := range ss {
+		v, e := strconv.ParseFloat(s, 64)
 		if err != nil {
 			err = errors.Wrap(e, "parse left steps failed")
 			return
 		}
-		leftSteps = append(leftSteps, i)
+		speeds = append(speeds, v)
 	}
-	rss := strings.Split(os.Getenv(model.RightSteps), ",")
-	for _, s := range rss {
-		i, e := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			err = errors.Wrap(e, "parse left steps failed")
-			return
-		}
-		rightSteps = append(rightSteps, i)
-	}
-	cfg.Period = period
-	cfg.LeftSteps, cfg.RightSteps = leftSteps, rightSteps
+	cfg.Speeds = speeds
 	a := os.Getenv(model.ListenAddr)
 	cfg.Addr = a
 	cfg.LeftAPin = uint8(leftA)
 	cfg.LeftBPin = uint8(leftB)
 	cfg.LeftPWMNum = uint8(leftPWM)
+	cfg.LeftEncoderAPin = uint8(leftEncoderA)
+	cfg.LeftEncoderBPin = uint8(leftEncoderB)
 	cfg.RightAPin = uint8(rightA)
 	cfg.RightBPin = uint8(rightB)
 	cfg.RightPWMNum = uint8(rightPWM)
+	cfg.RightEncoderAPin = uint8(rightEncoderA)
+	cfg.RightEncoderBPin = uint8(rightEncoderB)
 	return
 }
 
@@ -98,21 +107,28 @@ func main() {
 	leftB := rpio.Pin(cfg.LeftBPin)
 	rightA := rpio.Pin(cfg.RightAPin)
 	rightB := rpio.Pin(cfg.RightBPin)
-	leftDriver, err := driver.NewDriver(leftA, leftB, cfg.LeftPWMNum, cfg.Period)
+	leftDriver, err := driver.NewDriver(leftA, leftB, cfg.LeftPWMNum, 1000)
 	if err != nil {
 		panic(err)
 	}
-	rightDriver, err := driver.NewDriver(rightA, rightB, cfg.RightPWMNum, cfg.Period)
+	rightDriver, err := driver.NewDriver(rightA, rightB, cfg.RightPWMNum, 1000)
+	if err != nil {
+		panic(err)
+	}
+	ctl, err := controller.NewController(
+		cfg.Speeds,
+		leftDriver,
+		rightDriver,
+		int(cfg.LeftEncoderAPin),
+		int(cfg.LeftEncoderBPin),
+		int(cfg.RightEncoderAPin),
+		int(cfg.RightEncoderBPin),
+	)
 	if err != nil {
 		panic(err)
 	}
 	car := car.NewCar(
-		controller.NewController(
-			cfg.LeftSteps,
-			cfg.RightSteps,
-			leftDriver,
-			rightDriver,
-		),
+		ctl,
 		cfg.Addr,
 	)
 	car.Run()

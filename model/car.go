@@ -1,7 +1,5 @@
 package model
 
-import "fmt"
-
 // CarAction Action
 type CarAction string
 
@@ -27,26 +25,23 @@ type Request struct {
 type Response struct {
 	LeftDirection  Direction
 	RightDirection Direction
-	LeftDuty       uint64
-	RightDuty      uint64
+	LeftTarget     float64
+	RightTarget    float64
 	Error          error
-}
-
-func (r Response) String() string {
-	return fmt.Sprintf("Left Direction: %s || Left Power: %d ========== Right Direction: %s || Right Power: %d\n",
-		r.LeftDirection, r.LeftDuty, r.RightDirection, r.RightDuty)
 }
 
 // Config config
 type Config struct {
-	LeftAPin    uint8
-	LeftBPin    uint8
-	LeftPWMNum  uint8
-	RightAPin   uint8
-	RightBPin   uint8
-	RightPWMNum uint8
-	Period      uint64
-	LeftSteps   []uint64
-	RightSteps  []uint64
-	Addr        string
+	LeftAPin         uint8
+	LeftBPin         uint8
+	LeftPWMNum       uint8
+	RightAPin        uint8
+	RightBPin        uint8
+	RightPWMNum      uint8
+	LeftEncoderAPin  uint8
+	LeftEncoderBPin  uint8
+	RightEncoderAPin uint8
+	RightEncoderBPin uint8
+	Speeds           []float64
+	Addr             string
 }

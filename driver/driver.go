@@ -1,17 +1,14 @@
 package driver
 
 import (
-	"buxiong/car/model"
-
 	"github.com/pkg/errors"
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
 // Driver motor driver
 type Driver struct {
-	direction model.Direction
 	period    uint64
-	dutyCycle uint64
+	dutyCycle int64
 	aPin      rpio.Pin
 	bPin      rpio.Pin
 	pwm       *PWM
@@ -44,6 +41,7 @@ func initPWM(pwm *PWM, period uint64) error {
 	return nil
 }
 
+// NewDriver NewDriver
 func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*Driver, error) {
 	aPin.Output()
 	aPin.High()
@@ -58,7 +56,6 @@ func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*Driver, error
 		return nil, err
 	}
 	return &Driver{
-		direction: model.DirectionGlide,
 		period:    period,
 		dutyCycle: 0,
 		aPin:      aPin,
@@ -67,42 +64,45 @@ func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*Driver, error
 	}, nil
 }
 
+// Brake Brake
 func (d *Driver) Brake() {
 	d.aPin.Low()
 	d.bPin.Low()
 	d.pwm.SetDutyCycle(0)
-	d.direction = model.DirectionBrake
 	d.dutyCycle = 0
 }
 
-func (d *Driver) Glide() {
-	d.aPin.High()
-	d.bPin.High()
-	d.pwm.SetDutyCycle(0)
-	d.direction = model.DirectionGlide
-	d.dutyCycle = 0
+// SetDuty SetDuty
+func (d *Driver) SetDuty(duty int64) {
+	if duty > 0 {
+		d.aPin.Low()
+		d.bPin.High()
+		if duty > int64(d.period) {
+			d.pwm.SetDutyCycle(d.period)
+			d.dutyCycle = int64(d.period)
+		} else {
+			d.pwm.SetDutyCycle(uint64(duty))
+			d.dutyCycle = duty
+		}
+	} else {
+		d.aPin.High()
+		d.bPin.Low()
+		if -duty > int64(d.period) {
+			d.pwm.SetDutyCycle(d.period)
+			d.dutyCycle = -int64(d.period)
+		} else {
+			d.pwm.SetDutyCycle(uint64(-duty))
+			d.dutyCycle = duty
+		}
+	}
 }
 
-func (d *Driver) Forward(duty uint64) {
-	d.aPin.Low()
-	d.bPin.High()
-	d.pwm.SetDutyCycle(duty)
-	d.direction = model.DirectionForward
-	d.dutyCycle = duty
+// GetDuty GetDuty
+func (d *Driver) GetDuty() int64 {
+	return d.dutyCycle
 }
 
-func (d *Driver) Backward(duty uint64) {
-	d.aPin.High()
-	d.bPin.Low()
-	d.pwm.SetDutyCycle(duty)
-	d.direction = model.DirectionBackward
-	d.dutyCycle = duty
-}
-
-func (d *Driver) Status() *model.DriverStatus {
-	return model.NewDriverStatus(d.direction, d.dutyCycle)
-}
-
+// Close Close
 func (d *Driver) Close() error {
 	return d.pwm.Close()
 }

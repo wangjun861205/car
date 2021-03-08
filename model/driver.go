@@ -70,26 +70,14 @@ func (p *DriverInstruction) SetStatus(status *DriverStatus) {
 	p.status = status
 }
 
-// DriverStatus Driver status
-type DriverStatus struct {
-	direction Direction
-	duty      uint64
-}
+// DriverStatus DriverStatus
+type DriverStatus string
 
-// NewDriverStatus new driver status
-func NewDriverStatus(dir Direction, duty uint64) *DriverStatus {
-	return &DriverStatus{
-		direction: dir,
-		duty:      duty,
-	}
-}
-
-// Direction driver current direction
-func (s DriverStatus) Direction() Direction {
-	return s.direction
-}
-
-// Duty driver current duty
-func (s DriverStatus) Duty() uint64 {
-	return s.duty
-}
+const (
+	// Outputting Outputting
+	Outputting DriverStatus = "OUTPUTTING"
+	// Braking Braking
+	Braking DriverStatus = "BRAKING"
+	// Gliding Gliding
+	Gliding DriverStatus = "GLIDING"
+)

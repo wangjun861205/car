@@ -3,6 +3,7 @@ package remote
 import (
 	"buxiong/car/model"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ func (r *remote) registerHandler() {
 			log.Println(errors.Wrap(err, "failed to unmarshal response"))
 			return
 		}
-		log.Println(resp)
+		fmt.Printf("Left Target(Direction): %f(%s), Right Target(Direction): %f(%s)\n", resp.LeftTarget, resp.LeftDirection, resp.RightTarget, resp.RightDirection)
 	})
 }
 

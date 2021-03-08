@@ -30,6 +30,7 @@ func NewCar(ctl controller, addr string) *Car {
 
 // Run Run
 func (c *Car) Run() {
+	go c.ctl.Run()
 	listener, err := net.Listen("tcp", c.addr)
 	if err != nil {
 		log.Println(err)
@@ -127,13 +128,7 @@ OUTER:
 							c.ctl.Stop()
 						}
 						stat := c.ctl.Status()
-						resp := model.Response{
-							LeftDirection:  stat.Left().Direction(),
-							RightDirection: stat.Right().Direction(),
-							LeftDuty:       stat.Left().Duty(),
-							RightDuty:      stat.Right().Duty(),
-						}
-						b, _ = json.Marshal(resp)
+						b, _ = json.Marshal(stat)
 						if _, err := conn.Write(append(b, '\n')); err != nil {
 							fmt.Println(errors.Wrap(err, "server failed to write tcp connection"))
 							conn.Close()

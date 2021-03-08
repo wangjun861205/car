@@ -1,14 +1,14 @@
 package controller
 
-import (
-	"buxiong/car/model"
-)
-
 type driver interface {
 	Close() error
 	Brake()
-	Glide()
-	Forward(duty uint64)
-	Backward(duty uint64)
-	Status() *model.DriverStatus
+	SetDuty(duty int64)
+	GetDuty() int64
+}
+
+type speedMeter interface {
+	Run()
+	Close()
+	Speed() float64
 }
