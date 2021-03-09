@@ -223,8 +223,8 @@ func (s *SpeedMeter) Close() {
 	// <-s.done
 }
 
-// Speed motor speed
-func (s *SpeedMeter) Speed() float64 {
+// Measure motor speed
+func (s *SpeedMeter) Measure() float64 {
 	if time.Now().UnixNano()-s.aRisingTime > int64(100*time.Millisecond) {
 		return 0
 	}

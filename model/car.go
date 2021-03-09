@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // CarAction Action
 type CarAction string
 
@@ -43,5 +45,9 @@ type Config struct {
 	RightEncoderAPin uint8
 	RightEncoderBPin uint8
 	Speeds           []float64
+	PIDKp            float64
+	PIDKi            float64
+	PIDKd            float64
+	PIDCycle         time.Duration
 	Addr             string
 }

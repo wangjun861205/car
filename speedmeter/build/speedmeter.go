@@ -68,7 +68,7 @@ OUTER:
 			rd.Brake()
 			break OUTER
 		default:
-			ls, rs := lsm.Speed(), rsm.Speed()
+			ls, rs := lsm.Measure(), rsm.Measure()
 			lcp, rcp := float64(ld.GetDuty()), float64(rd.GetDuty())
 			lp, rp := pid(lcp, target, ls), pid(rcp, target, rs)
 			ld.SetDuty(int64(lp))

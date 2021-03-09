@@ -21,6 +21,14 @@ const (
 	RightEncoderAPin = "RIGHT_ENCODER_A_PIN"
 	// RightEncoderBPin right encoder b pin
 	RightEncoderBPin = "RIGHT_ENCODER_B_PIN"
+	// PIDKp PIDKp
+	PIDKp = "PID_KP"
+	// PIDKi PIDKi
+	PIDKi = "PID_KI"
+	// PIDKd PIDKd
+	PIDKd = "PID_KD"
+	// PIDCycle PIDCycle
+	PIDCycle = "PID_CYCLE"
 	// Speeds Speeds
 	Speeds = "SPEEDS"
 	// ListenAddr listen address

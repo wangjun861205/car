@@ -64,8 +64,8 @@ func NewDriver(aPin, bPin rpio.Pin, pwmNum uint8, period uint64) (*Driver, error
 	}, nil
 }
 
-// Brake Brake
-func (d *Driver) Brake() {
+// Stop Stop
+func (d *Driver) Stop() {
 	d.aPin.Low()
 	d.bPin.Low()
 	d.pwm.SetDutyCycle(0)
@@ -73,36 +73,36 @@ func (d *Driver) Brake() {
 }
 
 // SetDuty SetDuty
-func (d *Driver) SetDuty(duty int64) {
+func (d *Driver) SetDuty(duty float64) {
 	if duty > 0 {
 		d.aPin.Low()
 		d.bPin.High()
-		if duty > int64(d.period) {
+		if int64(duty) > int64(d.period) {
 			d.pwm.SetDutyCycle(d.period)
 			d.dutyCycle = int64(d.period)
 		} else {
 			d.pwm.SetDutyCycle(uint64(duty))
-			d.dutyCycle = duty
+			d.dutyCycle = int64(duty)
 		}
 	} else {
 		d.aPin.High()
 		d.bPin.Low()
-		if -duty > int64(d.period) {
+		if -int64(duty) > int64(d.period) {
 			d.pwm.SetDutyCycle(d.period)
 			d.dutyCycle = -int64(d.period)
 		} else {
 			d.pwm.SetDutyCycle(uint64(-duty))
-			d.dutyCycle = duty
+			d.dutyCycle = -int64(duty)
 		}
 	}
 }
 
 // GetDuty GetDuty
-func (d *Driver) GetDuty() int64 {
-	return d.dutyCycle
+func (d *Driver) GetDuty() float64 {
+	return float64(d.dutyCycle)
 }
 
 // Close Close
-func (d *Driver) Close() error {
-	return d.pwm.Close()
+func (d *Driver) Close() {
+	d.pwm.Close()
 }

@@ -125,7 +125,7 @@ OUTER:
 						case model.TurnRight:
 							c.ctl.TurnRight()
 						case model.Stop:
-							c.ctl.Stop()
+							c.ctl.Brake()
 						}
 						stat := c.ctl.Status()
 						b, _ = json.Marshal(stat)

@@ -5,9 +5,12 @@ import (
 	"buxiong/car/controller"
 	"buxiong/car/driver"
 	"buxiong/car/model"
+	"buxiong/car/pid"
+	"buxiong/car/speedmeter"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
@@ -65,6 +68,26 @@ func getConfig() (cfg model.Config, err error) {
 		err = errors.Wrap(err, "parse right encoder b pin num failed")
 		return
 	}
+	pidKp, err := strconv.ParseFloat(os.Getenv(model.PIDKp), 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse pid Kp failed")
+		return
+	}
+	pidKi, err := strconv.ParseFloat(os.Getenv(model.PIDKi), 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse pid Ki failed")
+		return
+	}
+	pidKd, err := strconv.ParseFloat(os.Getenv(model.PIDKd), 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse pid Kd failed")
+		return
+	}
+	pidCycle, err := time.ParseDuration(os.Getenv(model.PIDCycle))
+	if err != nil {
+		err = errors.Wrap(err, "parse pid cycle failed")
+		return
+	}
 	speeds := make([]float64, 0, 10)
 	ss := strings.Split(os.Getenv(model.Speeds), ",")
 	for _, s := range ss {
@@ -88,6 +111,10 @@ func getConfig() (cfg model.Config, err error) {
 	cfg.RightPWMNum = uint8(rightPWM)
 	cfg.RightEncoderAPin = uint8(rightEncoderA)
 	cfg.RightEncoderBPin = uint8(rightEncoderB)
+	cfg.PIDKp = pidKp
+	cfg.PIDKi = pidKi
+	cfg.PIDKd = pidKd
+	cfg.PIDCycle = pidCycle
 	return
 }
 
@@ -115,14 +142,20 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	leftMeter, err := speedmeter.NewSpeedMeter(int(cfg.LeftEncoderAPin), int(cfg.LeftEncoderBPin))
+	if err != nil {
+		panic(err)
+	}
+	rightMeter, err := speedmeter.NewSpeedMeter(int(cfg.RightEncoderAPin), int(cfg.RightEncoderBPin))
+	if err != nil {
+		panic(err)
+	}
+	leftPID := pid.NewPID(cfg.PIDKp, cfg.PIDKi, cfg.PIDKd, cfg.PIDCycle, leftDriver, leftMeter)
+	rightPID := pid.NewPID(cfg.PIDKp, cfg.PIDKi, cfg.PIDKd, cfg.PIDCycle, rightDriver, rightMeter)
 	ctl, err := controller.NewController(
 		cfg.Speeds,
-		leftDriver,
-		rightDriver,
-		int(cfg.LeftEncoderAPin),
-		int(cfg.LeftEncoderBPin),
-		int(cfg.RightEncoderAPin),
-		int(cfg.RightEncoderBPin),
+		leftPID,
+		rightPID,
 	)
 	if err != nil {
 		panic(err)

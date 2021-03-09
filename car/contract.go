@@ -11,7 +11,7 @@ type controller interface {
 	Backward()
 	TurnLeft()
 	TurnRight()
-	Stop()
+	Brake()
 	Status() *model.ControllerStatus
 }
 
