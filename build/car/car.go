@@ -4,6 +4,7 @@ import (
 	"buxiong/car/car"
 	"buxiong/car/controller"
 	"buxiong/car/driver"
+	"buxiong/car/electric"
 	"buxiong/car/model"
 	"buxiong/car/pid"
 	"buxiong/car/speedmeter"
@@ -15,6 +16,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/stianeikeland/go-rpio/v4"
+	"github.com/warthog618/gpiod"
 )
 
 func getConfig() (cfg model.Config, err error) {
@@ -99,6 +101,18 @@ func getConfig() (cfg model.Config, err error) {
 		speeds = append(speeds, v)
 	}
 	cfg.Speeds = speeds
+	mainSwitch, err := strconv.ParseUint(os.Getenv("MAIN_SWITCH_PIN"), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse main switch pin failed")
+		return
+	}
+	cfg.MainSwitchPin = uint8(mainSwitch)
+	headLight, err := strconv.ParseUint(os.Getenv("HEAD_LIGHT_PIN"), 10, 64)
+	if err != nil {
+		err = errors.Wrap(err, "parse headlight pin failed")
+		return
+	}
+	cfg.HeadLightPin = uint8(headLight)
 	a := os.Getenv(model.ListenAddr)
 	cfg.Addr = a
 	cfg.LeftAPin = uint8(leftA)
@@ -116,6 +130,18 @@ func getConfig() (cfg model.Config, err error) {
 	cfg.PIDKd = pidKd
 	cfg.PIDCycle = pidCycle
 	return
+}
+
+func newElectric(chip *gpiod.Chip, mainSwitch, headLight uint8) (*electric.Controller, error) {
+	mainSwitchLine, err := chip.RequestLine(int(mainSwitch), gpiod.AsOutput())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create main switch")
+	}
+	headLightLine, err := chip.RequestLine(int(headLight), gpiod.AsOutput())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create headlight")
+	}
+	return electric.NewController(mainSwitchLine, headLightLine), nil
 }
 
 func main() {
@@ -142,11 +168,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	leftMeter, err := speedmeter.NewSpeedMeter(int(cfg.LeftEncoderAPin), int(cfg.LeftEncoderBPin))
+	chip, err := gpiod.NewChip("gpiochip0")
 	if err != nil {
 		panic(err)
 	}
-	rightMeter, err := speedmeter.NewSpeedMeter(int(cfg.RightEncoderAPin), int(cfg.RightEncoderBPin))
+	leftMeter, err := speedmeter.NewSpeedMeter(chip, int(cfg.LeftEncoderAPin), int(cfg.LeftEncoderBPin))
+	if err != nil {
+		panic(err)
+	}
+	rightMeter, err := speedmeter.NewSpeedMeter(chip, int(cfg.RightEncoderAPin), int(cfg.RightEncoderBPin))
 	if err != nil {
 		panic(err)
 	}
@@ -160,8 +190,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	elec, err := newElectric(chip, cfg.MainSwitchPin, cfg.HeadLightPin)
+	if err != nil {
+		panic(err)
+	}
 	car := car.NewCar(
 		ctl,
+		elec,
 		cfg.Addr,
 	)
 	car.Run()
